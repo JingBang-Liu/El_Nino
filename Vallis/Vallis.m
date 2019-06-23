@@ -18,9 +18,9 @@ flag = 'none';
 
 %% parameters for timestepping
 
-transi = 8*12*30*24*60*60;  % in seconds
+transi = 400*12*30*24*60*60;  % in seconds
 % ttot   = 1000*12*30;  % run length in days 
-ttot = 200*12*30*24*60*60;
+ttot = 30*12*30*24*60*60;
 h     = 12*60*60;          % in seconds
 
 %% initial conditions
@@ -33,7 +33,7 @@ A = 1/12/30/24/60/60;
 B = 2;
 C = 1/4/30/24/60/60;
 U = -0.45;
-T_deep = 6.6;
+T_deep = 6.65;
 T = 12;
 dx = 7500*1000;
 omega = 2*pi/(12*30*24*60*60);

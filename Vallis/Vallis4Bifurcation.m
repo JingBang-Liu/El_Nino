@@ -1,8 +1,11 @@
-
-steps = 10001;
-TT = linspace(-5,10,steps);
+par_start = -7;
+par_end = 8;
+par_step = 0.0004; % stepsize of parameters
+steps = int64((par_end-par_start)/par_step+1);
+TT = [par_start:par_step:par_end]; % create
 TT_max = 0;
 UU_max = 0;
+initial_conditions = zeros(1,steps);
 
 %% Choice of which cycle to use
 flag = 'none';
@@ -10,36 +13,39 @@ flag = 'none';
 % flag = 'cycle_T';
 
 %% Set the length of time interval
-transi = 8*12*30*24*60*60;  % in seconds, this is 8 years
-ttot = 200*12*30*24*60*60; % this is 200 years
-h     = 12*60*60;          % in seconds, this is 0.5 day
+transi = 400*12*30*24*60*60;  % in seconds, this is 8 years
+ttot = 48*12*30*24*60*60; % this is 200 years
+h     = 5*24*60*60;          % in seconds, this is 0.5 day
 
 %% initial conditions
 u_init = -0.5; % in m*sec^(-1)
 T_w_init = 18; % in C
 T_e_init = 12; % in C
+y_init = [u_init;T_w_init;T_e_init];
+
+% parameters from Vallis
+A = 1/12/30/24/60/60; % sec^(-1)
+B = 2; % m^2 * sec^(-2) * C^(-1)
+C = 1/4/30/24/60/60; % sec^(-1)
+U = -0.45; % this is u* in the paper, in m*sec^(-1)
+
+T = 12; % this is T* in the paper, in C. This is different from the paper, as in the paper Vallis used 12.
+dx = 7500*1000; % m
+omega = 2*pi/(12*30*24*60*60); % the parameter for annual cycle, as in seconds a year
+
+%% derived parameters
+no_steps_transi = transi/h; % total timesteps: transient timesteps and timesteps
+no_steps = ttot/h; % timesteps 
+
 
 for j = 1:steps
-    % parameters from Vallis
-    A = 1/12/30/24/60/60; % sec^(-1)
-    B = 2; % m^2 * sec^(-2) * C^(-1)
-    C = 1/4/30/24/60/60; % sec^(-1)
-    U = -0.45; % this is u* in the paper, in m*sec^(-1)
     T_deep = TT(j); % this is T bar in the paper, in C
-    T = 12; % this is T* in the paper, in C. This is different from the paper, as in the paper Vallis used 12.
-    dx = 7500*1000; % m
-    omega = 2*pi/(12*30*24*60*60); % the parameter for annual cycle, as in seconds a year
-
-    %% derived parameters
-    no_steps_transi = transi/h; % total timesteps: transient timesteps and timesteps
-    no_steps = ttot/h; % timesteps 
-
     %% initialise variables transient
+    initial_conditions(:,j) = y_init;
     y_vec_transi = zeros(3,no_steps_transi+no_steps);
     t_vec_transi = zeros(1,no_steps_transi+no_steps);
     y_vec = zeros(3,no_steps);
     t_vec = zeros(1,no_steps);
-    y_init = [u_init;T_w_init;T_e_init];
     y_vec_transi(:,1) = y_init;
 
 
@@ -92,12 +98,11 @@ for j = 1:steps
 
     y_vec = y_vec_transi(:,no_steps_transi+1:end);
     t_vec = t_vec_transi(no_steps_transi+1:end);
+    y_init = y_vec(:,end);
+    
 
     %% Bifurcation diagram
     u = y_vec(1,:);
-    z = z1test(u(100000:200:end));
-    if z>0.1
-        
     gap = 2;
     k = 1;
     local_max = 0;
@@ -113,7 +118,10 @@ for j = 1:steps
     UU_max = [UU_max,local_max];
     TT_max = [TT_max,TT_temp];
     j
-    end
 end
 
-scatter(TT_max,UU_max)
+scatter(TT_max(2:end),UU_max(2:end),1.5,'filled')
+title('Bifurcation diagram of T_{deep}')
+xlabel('T_{deep}')
+xticks((par_start:0.05:par_end))
+ylabel('local maximum')
